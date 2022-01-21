@@ -1,13 +1,13 @@
 #!/bin/bash
 echo --------start the server---------
 
-trunk_prefix=~/server/
+trunk_prefix=~/trunk/
 qa_prefix=~/qa/
 
-lua_path=service/game/bin/game
-luajit_path=service/game/bin/game-jit
+lua_bin=game
+luajit_bin=game-jit
 
-conf_path=~/server/service/game/etc/config.lua
+conf_path=~/trunk/service/game/etc/config.lua
 
 docker start gate
 echo start gate done
@@ -15,20 +15,22 @@ echo start gate done
 prefix=""
 binpath=""
 
-if ["$1" == "qa"]; then
-    $prefix=$qa_prefix
-elif ["$1" == "trunk"]; then
-    $prefix=$trunk_prefix
+if [ "$1" == "qa" ]; then
+    prefix="$qa_prefix"
+elif [ "$1" == "trunk" ]; then
+    prefix=$trunk_prefix
 fi
 
-if ["$2" == "jit"]; then
-    $binpath=$luajit_path
+if [ "$2" == "jit" ]; then
+    binpath=$luajit_bin
 else
-    $binpath=$lua_path
+    binpath=$lua_bin
 fi
 
-${prefix}${binpath} conf_path
-
-echo start ${prefix}${binpath} done
+cd ${prefix}service/game/bin
+./${binpath} ${conf_path}
+#echo ./${binpath} ${conf_path}
+#echo $conf_path
+echo start ${1}-${2} done
 
 
