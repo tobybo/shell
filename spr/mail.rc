@@ -1,0 +1,5 @@
+set from=xxx@qq.com
+set smtp=smtp.qq.com
+set smtp-auth-user=xxx@qq.com
+set smtp-auth-password=xxx
+set smtp-auth=login
