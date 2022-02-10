@@ -1,0 +1,40 @@
+priority 0
+
+snippet date "YYYY-MM-DD" w
+`date +%Y-%m-%d`
+endsnippet
+
+snippet time "hh:mm:ss" w
+`date +%H:%M:%S`
+endsnippet
+
+snippet datetime "YYYY-MM-DD hh:mm:ss" w
+`date +%Y-%m-%d\ %H:%M:%S`
+endsnippet
+
+snippet tips "(toby@YYYY-MM-DD):" w
+--(toby@`date +%Y-%m-%d`): $1
+endsnippet
+
+snippet log "LOG()" w
+LOG("[$1], $2")
+endsnippet
+
+snippet warn "WARN()" w
+WARN("[$1], $2")
+endsnippet
+
+snippet err "ERROR()" w
+ERROR("[$1], $2")
+endsnippet
+
+snippet title "TITLE @toby" w
+--==============================================================================
+-- $1
+-- Author: toby
+-- Designer: $2
+-- History:
+--     `date +%Y-%m-%d\ %H:%M:%S` Updated
+-- Copyright © `date +%Y` IGG SINGAPORE PTE. LTD. All rights reserved.
+--==============================================================================
+endsnippet

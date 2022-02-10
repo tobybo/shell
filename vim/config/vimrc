@@ -1,0 +1,557 @@
+"-------------------------------------------------------------------------------
+" Brief   : Vim Config
+" Author  : Yang Cong <mr.yng@foxmail.com>
+" History : 2021-07-12 22:24:37 Updated
+" Copyright © 2021 Yang Cong. All rights reserved.
+"-------------------------------------------------------------------------------
+
+"--------------------------------------------------------
+" 1. Plugin
+"--------------------------------------------------------
+" vim-plug
+call plug#begin('~/.vim/plugged')
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'crusoexia/vim-monokai'
+Plug 'mhinz/vim-startify'
+Plug 'kshenoy/vim-signature'
+Plug 'Yggdroot/indentLine'
+Plug 'rking/ag.vim'
+Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
+Plug 'Valloric/YouCompleteMe', { 'branch': 'legacy-py2', 'do': './install.py --clang-completer --go-completer' }
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+Plug 'tbastos/vim-lua'
+Plug 'vim-syntastic/syntastic'
+Plug 'godlygeek/tabular'
+Plug 'preservim/nerdtree'
+Plug 'preservim/nerdcommenter'
+Plug 'preservim/tagbar'
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'bfrg/vim-qf-preview'
+Plug 'tpope/vim-fugitive', { 'tag': 'v3.6' }
+Plug 'chr4/nginx.vim'
+call plug#end()
+
+" vim-airline
+set laststatus=2
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#tab_nr_type = 1
+let g:airline#extensions#tabline#show_buffers = 1
+let g:airline#extensions#tabline#show_close_button = 0
+
+let g:airline_powerline_fonts = 1
+if !exists('g:airline_symbols')
+  let g:airline_symbols = {}
+endif
+" powerline symbols
+let g:airline_left_sep = ''
+let g:airline_left_alt_sep = ''
+let g:airline_right_sep = ''
+let g:airline_right_alt_sep = ''
+let g:airline_symbols.branch = ''
+let g:airline_symbols.dirty = '✗'
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.linenr = ''
+let g:airline_symbols.maxlinenr = ''
+let g:airline_symbols.notexists = ''
+let g:airline_symbols.whitespace = 'Ξ'
+
+let g:airline#extensions#tabline#buffer_idx_mode = 1
+nmap <C-h> <Plug>AirlineSelectPrevTab
+nmap <C-l> <Plug>AirlineSelectNextTab
+
+" vim-startify
+let g:startify_session_dir = '~/.cache/session'
+let g:startify_session_autoload = 1
+" Automatically update sessions
+let g:startify_session_persistence = 1
+let g:startify_files_number = 5
+" Delete all buffers when loading or closing a session:
+let g:startify_session_delete_buffers = 1
+" When opening a file or bookmark, not change to its directory.
+let g:startify_change_to_dir = 0
+" When opening a file or bookmark, seek and change to the root directory of the VCS (if there is one).
+" At the moment only git, hg, bzr and svn are supported.
+let g:startify_change_to_vcs_root = 0
+let g:startify_bookmarks = [ {'v': '~/.vimrc'}, {'z': '~/.zshrc'} ]
+let g:startify_lists = [
+      \ { 'type': 'sessions',  'header': ['   Sessions']       },
+      \ { 'type': 'files',     'header': ['   MRU']            },
+      \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+      \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+      \ { 'type': 'commands',  'header': ['   Commands']       },
+      \ ]
+let g:startify_custom_header = [
+        \ '    +-----------------------------------+',
+        \ '    |                                   |',
+        \ '    |    The Devil Is In The Detail.    |',
+        \ '    |                                   |',
+        \ '    +-----------------------------------+',
+        \ ]
+
+" indentLine
+" let g:indentLine_char = '¦'
+let g:vim_json_conceal = 0
+
+" NERD Tree
+let NERDTreeWinSize = 35
+let NERDTreeChDirMode = 2
+let NERDTreeIgnore = ['\~$', '\.o$[[file]]', '\.pyc$[[file]]', '\.swp$[[file]]', '\.svn$[[dir]]', '\.git$[[dir]]']
+let NERDTreeShowBookmarks = 1
+let NERDTreeWinPos = "left"
+let g:NERDTreeDirArrowExpandable = '+'
+let g:NERDTreeDirArrowCollapsible = '-'
+" close vim if the only window left open is a NERDTree
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+" Open a sidebar
+fun! <SID>sidebar()
+	" If NERDTree is opened
+    if exists("g:NERDTree") && g:NERDTree.IsOpen()
+		exe ":NERDTreeClose"
+	else
+        " If a file is opened
+        if @% == ""
+            exe ":NERDTreeToggle"
+        else
+            exe ":NERDTreeFind"
+        endif
+	endif
+endfun
+nmap <silent> <c-e> :call <SID>sidebar()<CR>
+
+" NERD Commenter
+" Add spaces after comment delimiters by default
+let g:NERDSpaceDelims = 1
+" Use compact syntax for prettified multi-line comments
+let g:NERDCompactSexyComs = 1
+" Align line-wise comment delimiters flush left instead of following code indentation
+let g:NERDDefaultAlign = 'left'
+" Set a language to use its alternate delimiters by default
+" let g:NERDAltDelims_java = 1
+" Add your own custom formats or override the defaults
+let g:NERDCustomDelimiters = {
+    \ 'c': { 'left': '//','right': '' },
+    \ 'c++': { 'left': '//','right': '' },
+\ }
+" Allow commenting and inverting empty lines (useful when commenting a region)
+let g:NERDCommentEmptyLines = 1
+" Enable trimming of trailing whitespace when uncommenting
+let g:NERDTrimTrailingWhitespace = 1
+" Enable NERDCommenterToggle to check all selected lines is commented or not
+let g:NERDToggleCheckAllLines = 1
+" Use 'C-/' as a shortcut. For some reason, vim registers <C-/> as <C-_>
+nmap <C-_> <leader>c<Space>
+vmap <C-_> <leader>c<Space>
+
+" ctags --list-kinds=c++
+" d  macro definitions
+" e  enumerators (values inside an enumeration)
+" f  function definitions
+" g  enumeration names
+" h  included header files
+" l  local variables [off]
+" m  class, struct, and union members
+" p  function prototypes [off]
+" s  structure names
+" t  typedefs
+" u  union names
+" v  variable definitions
+" x  external and forward variable declarations [off]
+" z  function parameters inside function definitions [off]
+" L  goto labels [off]
+" D  parameters inside macro definitions [off]
+" c  classes
+" n  namespaces
+" A  namespace aliases [off]
+" N  names imported via using scope::symbol [off]
+" U  using namespace statements [off]
+" Z  template parameters [off]
+
+" tagbar
+nmap <F10> :TagbarToggle<CR>
+let g:tagbar_autoclose = 1
+let g:tagbar_autofocus = 1
+let g:tagbar_type_c = {
+    \ 'kinds' : [
+        \ 'd:macros:1',
+        \ 'g:enums',
+        \ 't:typedefs:0:0',
+        \ 'e:enumerators:0:0',
+        \ 's:structs',
+        \ 'u:unions',
+        \ 'm:members:0:0',
+        \ 'v:variables:0:0',
+        \ 'f:functions'
+    \ ]
+\ }
+let g:tagbar_type_cpp = {
+    \ 'kinds' : [
+        \ 'd:macros:1',
+        \ 'g:enums',
+        \ 't:typedefs:0:0',
+        \ 'e:enumerators:0:0',
+        \ 'n:namespaces',
+        \ 'c:classes',
+        \ 's:structs',
+        \ 'u:unions',
+        \ 'm:members:0:0',
+        \ 'v:variables:0:0',
+        \ 'f:functions'
+    \ ]
+\ }
+
+" vim-qf-preview
+let g:qfpreview = {
+    \ 'scrollup': 'k',
+    \ 'scrolldown': 'j',
+    \ 'halfpageup': 'u',
+    \ 'halfpagedown': 'd',
+    \ 'fullpageup': 'b',
+    \ 'fullpagedown': 'f',
+    \ 'next': 'n',
+    \ 'previous': 'p',
+    \ 'height': 25,
+    \ 'offset': 12,
+    \ 'number': 1, 'sign': {'linehl': 'CursorLine'}
+    \ }
+augroup qfpreview
+    autocmd!
+    autocmd FileType qf nmap <buffer> p <plug>(qf-preview-open)
+augroup END
+
+" vim-gutentags
+" CTRL-T: jump back, CTRL-]: jump forward
+" let $GTAGSLABEL = 'native-pygments'
+" let $GTAGSCONF = '/usr/local/share/gtags/gtags.conf'
+let g:gutentags_project_root = ['.svn', '.git', '.hg', '.root', '.project']
+let g:gutentags_ctags_tagfile = '.tags'
+let g:gutentags_modules = []
+if executable('ctags')
+    let g:gutentags_modules += ['ctags']
+endif
+" if executable('gtags-cscope') && executable('gtags')
+"     let g:gutentags_modules += ['gtags_cscope']
+" endif
+let g:gutentags_cache_dir = expand('~/.cache/tags')
+let g:gutentags_ctags_extra_args = ['--fields=+ainz', '--fields=-t', '--extras=+q', '--pattern-length-limit=120']
+let g:gutentags_ctags_extra_args += ['--c-kinds=dflptx']
+let g:gutentags_ctags_extra_args += ['--c++-kinds=dflptxc']
+let g:gutentags_ctags_extra_args += ['--output-format=e-ctags']
+
+" LeaderF
+let g:Lf_UseCache = 0
+let g:Lf_UseMemoryCache = 0
+let g:Lf_ShortcutF = '<C-p>'
+let g:Lf_ShortcutB = '<C-b>'
+" let g:Lf_PreviewInPopup = 1
+let g:Lf_TabpagePosition = 2
+let g:Lf_RecurseSubmodules = 1
+let g:Lf_PreviewHorizontalPosition = 'right'
+let g:Lf_StlSeparator = { 'left': '', 'right': '' }
+let g:Lf_WildIgnore = {
+    \ 'dir': ['.svn','.git','.hg', 'dbdata', 'log'],
+    \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
+    \ }
+let g:Lf_CtagsFuncOpts = {
+    \ 'c': '--c-kinds=fp',
+    \ 'c++': '--c++-kinds=fp',
+    \ }
+nnoremap <silent> <C-j> :LeaderfFunction<CR>
+
+" ag.vim
+" If 1, highlight the search terms after searching. Default: 0
+let g:ag_highlight = 1
+" Disable default shortcut keys
+let g:ag_apply_lmappings = 0
+let g:ag_apply_qmappings = 0
+let g:ag_prg="ag --vimgrep --word-regexp --smart-case --ignore log -p ~/.ignore"
+" 禁止自动打开第一个搜索结果
+ca ag Ag!
+" Ctrl-F 全局查找
+nnoremap <silent> <C-f> :Ag! <cword><CR>
+fun! <SID>open_quickfix(split_cmd)
+	" 1. the current line is the result idx as we are in the quickfix
+	let l:qf_idx = line('.')
+	" 2. jump to the previous window
+	wincmd p
+	" 3. switch to a new split created by the split_cmd
+	execute a:split_cmd
+	" 4. open the 'current' item of the quickfix list in the newly created buffer
+	"    (the current means, the one focused before switching to the new buffer)
+	execute l:qf_idx . 'cc'
+	" 5. close the quickfix window
+	cclose
+endfun
+autocmd FileType qf nnoremap <silent> <buffer> q :wincmd p<CR>:cclose<CR>
+autocmd FileType qf nnoremap <silent> <buffer> o :call <SID>open_quickfix("")<CR>
+autocmd FileType qf nnoremap <silent> <buffer> <C-]> :call <SID>open_quickfix("bel vsplit")<CR>
+
+" YouCompleteMe
+set completeopt=longest,menu                                           " 让 Vim 的补全菜单行为与一般 IDE 一致(参考 VimTip1228)
+let g:ycm_key_list_stop_completion = ['<CR>']                          " 回车终止补全
+let g:ycm_log_level = 'info'                                           " 日志级别 debug info warning error critical
+let g:ycm_complete_in_comments = 1                                     " 在注释输入中也能补全
+let g:ycm_complete_in_strings = 1                                      " 在字符串输入中也能补全
+let g:ycm_collect_identifiers_from_comments_and_strings = 0            " 注释和字符串中的文字也会被收入补全
+let g:ycm_global_ycm_extra_conf = "~/.vim/etc/ycm_extra_conf.py"       " 设置默认 config
+let g:ycm_confirm_extra_conf = 0                                       " 找到配置: 0 自动加载, 1 手动确认
+let g:ycm_collect_identifiers_from_tags_files = 1                      " 开启 YCM 基于标签引擎
+let g:ycm_min_num_of_chars_for_completion = 2                          " 从第 2 个键入字符就开始罗列匹配项
+let g:ycm_cache_omnifunc = 0                                           " 禁止缓存匹配项,每次都重新生成匹配项
+let g:ycm_seed_identifiers_with_syntax = 1                             " 语法关键字补全
+let g:ycm_use_ultisnips_completer = 1                                  " 使用 Ultisnips 提供的代码补全
+hi link YcmErrorSection cleared                                        " 默认配色影响代码阅读, 删之
+autocmd InsertLeave * if pumvisible() == 0|pclose|endif                " 离开插入模式后自动关闭预览窗口
+inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"                 " 回车即选中当前项
+nnoremap <F11> :YcmCompleter FixIt<CR>                                 " 跳转(CTRL-O: jump back, CTRL-I: jump forward)
+nnoremap <F12> :YcmCompleter GoToDefinitionElseDeclaration<CR>         " 跳转(CTRL-O: jump back, CTRL-I: jump forward)
+
+" vim-snippets
+let g:UltiSnipsExpandTrigger       = '<c-c>'
+let g:UltiSnipsJumpForwardTrigger  = '<c-c>'
+let g:UltiSnipsJumpBackwardTrigger = '<c-k>'
+let g:UltiSnipsSnippetDirectories  = ['UltiSnips', 'snippets.local']
+
+" syntastic
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_lua_checkers = ["luac"]
+let g:syntastic_c_checkers = ["gcc"]
+let g:syntastic_cpp_checkers = ["g++"]
+
+" Tabular
+nmap <Leader>a= :Tabularize /=<CR>
+vmap <Leader>a= :Tabularize /=<CR>
+nmap <Leader>a: :Tabularize /:<CR>
+vmap <Leader>a: :Tabularize /:<CR>
+nmap <Leader>a- :Tabularize /--<CR>
+vmap <Leader>a- :Tabularize /--<CR>
+
+" vim-fugitive
+
+"--------------------------------------------------------
+" 2. Vim
+"--------------------------------------------------------
+" Set mapleader(default '\')
+" let mapleader = '\'
+
+" 设置自动切换目录, 以当前打开的目录为准 auto cd
+" set autochdir
+
+" 禁止生成 swp 文件
+" set noswapfile
+
+" 设置缩进
+set tabstop=4                         " ts  设置 tabs 宽度为4个空格
+set shiftwidth=4                      " sw  输入 { 符号后, 智能缩进的长度
+set expandtab                         " et  设置输入时用空格展开 tab
+set autoindent                        " ai  自动缩进
+set smartindent                       " si  智能缩进
+set cindent                           " cin C语言风格缩进
+" 强制指定某些文件类型缩进格式
+autocmd FileType python setlocal ts=4 sw=4 expandtab
+autocmd FileType yaml setlocal ts=4 sw=4 expandtab
+
+" 设置 Backspace 可以往前删除字符
+set backspace=indent,eol,start
+
+" 设置高亮搜索结果
+set hlsearch
+" 取消被搜索字串的高亮
+nmap <F8> :nohls<CR>
+
+" 设置默认进行大小写不敏感查找; 若包含大写字母, 则覆盖 ignorecase 选项, 切换为大小写敏感查找
+set ignorecase smartcase
+
+" 搜索到文件两端时重新搜索
+" set nowrapscan
+set wrapscan
+
+" 输入搜索内容时就显示搜索结果
+set incsearch
+
+" 设置显示(读取)文件时编码
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,gbk,latin1
+
+" 设置文件格式 unix/dos
+set fileformats=unix,dos
+
+" 打开文件时, 按照 viminfo 保存的上次关闭时的光标位置重新设置光标
+autocmd BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
+" 打开文件时, 自动替换 tab 为空格
+" autocmd BufReadPost * :retab
+" 非diff模式保存文件时, 删除行尾空格, 文件尾保留一个空行
+fun! <SID>trim()
+    if !&diff
+        let s:pos = getpos(".")
+        silent! %s/\s\+$//
+        " \(   Start a match group
+        " $\n  Match a new line (end-of-line character followed by a carriage return).
+        " \)   End the match group
+        " \+   Allow any number of occurrences of this group (one or more).
+        " \%$  Match the end of the file
+        " silent! %s/\($\n\)\+\%$//
+        " silent! %s/\%$/\r/
+        call setpos(".", s:pos)
+    endif
+endfun
+autocmd BufWritePre * :call <SID>trim()
+
+" Ignore white space in vimdiff
+set diffopt+=iwhite
+
+" 根据语法施加彩色(配色方案)
+syntax enable
+syntax on
+set t_Co=256
+set background=dark
+" colo wombat256mod
+colo monokai
+
+" 显示行号
+set nu
+
+" 显示状态栏(默认值为 1, 无法显示状态) -- 由 airline 插件接管
+" set laststatus=2
+" 设置状态栏显示内容(文件路径, dos/unix: 编码类型, 行号, 列号, 百分比)
+" set statusline=[%F,\ %{&ff}:%{&fenc}]%m%r%h%w\ %=[%l/%L,\%3c][%3p%%]
+
+" 非diff模式高亮当前行
+if !&diff
+    set cursorline
+endif
+" 高亮当前列
+" set cursorcolumn
+" vertical ruler
+set colorcolumn=120
+
+" quickfix
+ca co copen
+ca lo lopen
+" ca cc cclose
+autocmd FileType qf setlocal colorcolumn=
+
+" 开启折行
+set linebreak
+
+"--------------------------------------------------------
+" 3. Command
+"--------------------------------------------------------
+" Format Json
+command! FormatJson :execute '% !jq --indent 4 .'
+
+"--------------------------------------------------------
+" 4. Note
+"--------------------------------------------------------
+
+"-------------------------------
+" set invlist 显示不可见字符
+" set nolist  不显示不可见字符
+
+"-------------------------------
+" About filetype
+" command                         detection   plugin      indent
+" :filetype on                    on          unchanged   unchanged
+" :filetype off                   off         unchanged   unchanged
+" :filetype plugin on             on          on          unchanged
+" :filetype plugin off            unchanged   off         unchanged
+" :filetype indent on             on          unchanged   on
+" :filetype indent off            unchanged   unchanged   off
+" :filetype plugin indent on      on          on          on
+" :filetype plugin indent off     unchanged   off         off
+" To see the current status, type :filetype
+
+"-------------------------------
+" 查找替换相关
+" /keyword         向后查找
+" ?keyword         向前查找
+" *                向后查找光标处的单词
+" #                向前查找光标出的单词
+" :s/aa/bb/g       将光标所在行出现的所有包含 aa 的字符串中的 aa 替换为 bb
+" :s/\<aa\>/bb/g   将光标所在行出现的所有 aa 替换为 bb, 仅替换 aa 这个单词
+" :%s/aa/bb/g      将文档中出现的所有包含 aa 的字符串中的 aa 替换为 bb
+" :10,23s/aa/bb/g  将从 10 行到 23 行中出现的所有包含 aa 的字符串中的 aa 替换为 bb
+" :10,23s/^/#/     将从 10 行到 23 行的行首加入 # 字符
+" :%s= *$==        将所有行尾多余的空格删除
+" :g/^\s*$/d       将所有不包含字符(空格也不包含)的空行删除.
+" :%s/\t/    /cg   将 TAB 制表符替换为 4 个空格
+
+"------------------------------
+" 光标快速定位
+" w     下一个单词词首
+" b     当前/上一个单词词首
+" e     当前/下一个单词词尾
+" 0     移动光标到行首
+" ^     移动光标到行首字符处
+" $     移动光标到行尾
+" H     移动光标到屏幕的首行行首
+" M     移动光标到屏幕的中间一行行首
+" L     移动光标到屏幕的尾行行首
+" gg    移动光标到文档首行行首
+" G     移动光标到文档尾行行首
+" Enter 移动光标到下一行首字符处
+
+" 移动屏幕
+" ctrl-e   光标不动, 屏幕上移
+" ctrl-y   光标不动, 屏幕下移
+" zz       将光标所在行移到屏幕中间
+" zt       将光标所在行移到屏幕顶端
+" zb       将光标所在行移到屏幕底部
+" ctrl + D 向前滚动半屏
+" ctrl + U 向后滚动半屏
+" ctrl + L 刷新屏幕
+
+"------------------------------
+" 跳转
+" %    跳到匹配的括号处
+" [[   转到上一个位于第一列的“{”
+" ]]   转到下一个位于第一列的“{
+" {    转到上一个空行
+" }    转到下一个空行
+
+"------------------------------
+" 关于快速删除
+" x/X  向后/向前删除单个字符
+" db   从光标处往前删除到词首
+" de   从光标处往后删除到词尾(包含词尾空格)
+" dw   从光标处往后删除到词尾(不含词尾空格)
+" daw  删除光标上的单词
+" d2w  从光标处往后删除 2 个单词
+" d0   从光标处删除到行首
+" d^   从光标处删除到首字符
+" d$   从光标处删除到行尾(可用 D 代替)
+" dd   删除光标所在行
+" 3dd  连续删除 3 行
+" .    重复上次指令
+
+"------------------------------
+" 折叠
+" zf   F-old creation (创建折叠)
+" zo   O-pen a fold   (打开折叠)
+" zc   C-lose a fold  (关闭折叠)
+" zM   折叠全部
+" zR   打开全部折叠
+" zA   打开和关闭之间切换
+
+"------------------------------
+" 关于 \r\n 和 ^M
+" \r 又叫 CR, 在 vim 中显示为 ^M, 使用 ctrl+v+m 可以输入
+" \n 又叫 LF, vim 中使用 $ 代表
+" DOS/win 下换行是由 \r\n 组成, Linux 下换行只有 \n
+" 当既有 \n 也有 \r\n 时, vim 默认按照 unix 来显示, 导致显示很多 ^M, 通过如下命令解决
+" 强制按照 dos 来显示和编辑(编辑时换行符也是 dos 换行符, 但不影响原来的 unix 换行符)  :e ++ff=dos %
+" 强制按照 unix 来显示和编辑 :e ++ff=unix %
+" 在 vim 中直接通过如下命令 :%s/^M//g 去掉 ^M
+" 在 vim 中显示 ^M 的方法是 :e ++ff=unix %
+" 使用 grep '^M' filename 来判断文件中是否包含这个符号; 或者 file filename
+" 可以使用 tr 命令删除 \r : cat file | tr -d '\r' > new_file
+
