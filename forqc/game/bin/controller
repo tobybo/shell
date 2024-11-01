@@ -1,0 +1,138 @@
+#!/bin/bash
+#-------------------------------------------------------------------------------
+# Brief   : Game Controller
+# Author  : Yang Cong <mr.yng@foxmail.com>
+# History : 2021-08-05 16:52:19 Updated
+# Copyright © 2021 IGG SINGAPORE PTE. LTD. All rights reserved.
+#-------------------------------------------------------------------------------
+
+CMD=$1
+shift
+while getopts 'c:' OPT; do
+    case ${OPT} in
+        c)
+            CONFIG_PATH="${OPTARG}";;
+        ?)
+            exit 1;;
+    esac
+done
+
+TARGET="game"
+SCRIPT_PATH=$(realpath ${BASH_SOURCE})
+SCRIPT_DIR=$(dirname ${SCRIPT_PATH})
+TARGET_PATH="${SCRIPT_DIR}/${TARGET}"
+DEFAULT_CONFIG="${SCRIPT_DIR}/../etc/config.lua"
+CONFIG_PATH=$(realpath ${CONFIG_PATH-"${DEFAULT_CONFIG}"})
+cd ${SCRIPT_DIR}
+
+_error()
+{
+    echo -e "\e[31;1m [ ERROR ] \e[0m $*"
+    exit 1
+}
+
+get_pid()
+{
+    echo "$(ps -ef | grep "${TARGET_PATH} *${CONFIG_PATH}" | grep -v 'grep' | awk -F' ' '{print $2}')"
+}
+
+check_config()
+{
+    if [[ ! -f ${CONFIG_PATH} ]]; then
+        _error "the config file (${CONFIG_PATH}) does not exist."
+    fi
+}
+
+get_pidfile()
+{
+    index=$(basename ${CONFIG_PATH} | sed -nr 's/^[^0-9]+([0-9]+).*/\1/gp')
+    echo "../${TARGET}${index}.pid"
+}
+
+monitor()
+{
+    time=0
+    pidfile=$(get_pidfile)
+    while [[ ${time} -lt 120 ]]; do
+        PID=$(get_pid)
+        if [[ $1 -eq 0 ]]; then
+            if [[ -f ${pidfile} && $(cat ${pidfile}) -eq ${PID} ]]; then
+                exit 0
+            fi
+        else
+            if [[ ! -f ${pidfile} && -z ${PID} ]]; then
+                exit 0
+            fi
+        fi
+        ((time++))
+        sleep 1s
+    done
+    if [[ $1 -eq 0 ]]; then
+        kill -SIGKILL ${PID}
+    fi
+    exit 1
+}
+
+start()
+{
+    PID=$(get_pid)
+    if [[ -n ${PID} ]]; then
+        _error "${TARGET} is running."
+    else
+        ${TARGET_PATH} ${CONFIG_PATH}
+        monitor 0
+    fi
+}
+
+stop()
+{
+    PID=$(get_pid)
+    if [[ -z ${PID} ]]; then
+        _error "${TARGET} is not running."
+    else
+        kill -SIGQUIT ${PID}
+        monitor 1
+    fi
+}
+
+reload()
+{
+    PID=$(get_pid)
+    if [[ -z ${PID} ]]; then
+        _error "${TARGET} is not running."
+    else
+        kill -SIGUSR1 ${PID}
+    fi
+}
+
+dofile()
+{
+    PID=$(get_pid)
+    if [[ -z ${PID} ]]; then
+        _error "${TARGET} is not running."
+    else
+        kill -SIGUSR2 ${PID}
+    fi
+}
+
+help()
+{
+    echo -e "\nUsage: $(basename ${BASH_SOURCE}) command [options]\n"
+    echo -e "Commands:"
+    echo -e "  start     start ${TARGET}"
+    echo -e "  stop      stop ${TARGET}"
+    echo -e "  reload    reload ${TARGET}"
+    echo -e "  dofile    execute script/extra.lua\n"
+    echo -e "Options:"
+    echo -e "  -c file"
+    echo -e "            specify the configuration file path, instead of the default ../etc/config.lua\n"
+}
+
+case ${CMD} in
+    (start|stop|reload|dofile|\))
+        check_config
+        eval ${CMD};;
+    *) help;;
+esac
+#============================================================================== [ Controller End ]
+
